@@ -86,7 +86,6 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Create Release
-        if: steps.check_release.outputs.release_id == '0'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
