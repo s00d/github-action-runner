@@ -19,10 +19,6 @@ jobs:
         id: version
         run: echo "::set-output name=version::$(cat version)"
 
-      - name: Read version
-        id: version
-        run: echo "::set-output name=version::$(cat version)"
-
       - name: Check if release exists
         id: check_release
         run: |
