@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/gar
+          path: target/${{ matrix.target }}/release/gar${{ runner.os == 'Windows' && '.exe' || '' }}
 
   release:
     needs: build
@@ -96,6 +96,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./x86_64-pc-windows-msvc/gar
-          asset_name: gar-x86_64-pc-windows-msvc
+          asset_path: ./x86_64-pc-windows-msvc/gar${{ runner.os == 'Windows' && '.exe' || '' }}
+          asset_name: gar-x86_64-pc-windows-msvc.exe
           asset_content_type: application/octet-stream
