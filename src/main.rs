@@ -39,15 +39,12 @@ async fn github_request(url: &str, token: &str, method: &str, data: Option<serde
     };
 
     let response_text = response.text().await?;
-    println!("Response text: {}", response_text);
 
     if response_text.trim().is_empty() {
         return Ok(serde_json::Value::Null);
     }
 
     let data: serde_json::Value = serde_json::from_str(&response_text)?;
-
-    println!("{}", data);
     Ok(data)
 }
 
