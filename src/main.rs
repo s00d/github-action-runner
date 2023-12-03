@@ -1,13 +1,14 @@
 use std::env;
 use std::fs;
-use std::process::Command;
 use dialoguer::{Input, Confirm, Select, theme::ColorfulTheme};
 use regex::Regex;
 use serde_json::json;
 use reqwest::Client;
 use git2::Repository;
 use colored::*;
+use serde::Deserialize;
 
+#[derive(Deserialize)]
 struct Workflow {
     id: String,
     name: String,
@@ -56,7 +57,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let workflows_data = github_request(&url, &token, "GET", None).await?;
     let workflows: Vec<Workflow> = serde_json::from_value(workflows_data["workflows"].clone())?;
 
-    let workflow_names: Vec<&str> = workflows.iter().map(|wf| wf.name.as_str()).collect();
+    let workflow_names: Vec<String> = workflows.iter().map(|wf| {
+        let mut name = wf.name.clone();
+        if wf.name.to_lowercase().contains("prod") {
+            name = format!(" !!! {} ", name).red().to_string();
+        }
+        if wf.name.to_lowercase().contains("test") {
+            name = format!(" {} ", name).blue().to_string();
+        }
+        name
+    }).collect();
+
     let selected = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select a workflow:")
         .items(&workflow_names)
@@ -104,4 +115,34 @@ fn get_git_tree_name() -> Result<String, git2::Error> {
     let head = repo.head()?;
     let name = head.shorthand().unwrap();
     Ok(name.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_git_owner() {
+        let url = "https://github.com/owner/repo.git";
+        let re = Regex::new(r"github\.com[/:](.*?)/").unwrap();
+        let caps = re.captures(url).unwrap();
+        let owner = caps.get(1).map_or("", |m| m.as_str()).to_string();
+        assert_eq!(owner, "owner");
+    }
+
+    #[test]
+    fn test_get_git_repo() {
+        let url = "https://github.com/owner/repo.git";
+        let re = Regex::new(r"github\.com[/:].*?/(.*?)(\.git)?$").unwrap();
+        let caps = re.captures(url).unwrap();
+        let repo = caps.get(1).map_or("", |m| m.as_str()).to_string();
+        assert_eq!(repo, "repo");
+    }
+
+    // Assuming the repository is on the "main" branch
+    #[test]
+    fn test_get_git_tree_name() {
+        let tree_name = get_git_tree_name().unwrap();
+        assert_eq!(tree_name, "main");
+    }
 }

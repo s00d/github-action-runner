@@ -6,7 +6,7 @@
 
 ## Installation
 
-You can download the pre-compiled binary from the [Releases](https://github.com/s00d/gar/releases) page on GitHub. Choose the version that suits your operating system and architecture.
+You can download the pre-compiled binary from the [Releases](https://github.com/s00d/github-action-runner/releases) page on GitHub. Choose the version that suits your operating system and architecture.
 
 If you want to compile the project from source, follow these steps:
 
