@@ -2,15 +2,45 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "::set-output name=version::$(cat version)"
+
+      - name: Read version
+        id: version
+        run: echo "::set-output name=version::$(cat version)"
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          RESPONSE_CODE=$(curl --write-out "%{http_code}" --silent --output /dev/null "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/v${{ steps.version.outputs.version }}")
+          if [ "$RESPONSE_CODE" -eq 200 ]; then
+            echo "::set-output name=exists::true"
+            echo "Release v${{ steps.version.outputs.version }} already exists. Exiting."
+            exit 1
+          else
+            echo "::set-output name=exists::false"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
   build:
     name: Build
+    needs: check
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -27,7 +57,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -56,19 +86,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download artifacts
+        if: steps.check_release.outputs.release_id == '0'
         uses: actions/download-artifact@v3
 
       - name: Create Release
+        if: steps.check_release.outputs.release_id == '0'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset
-        id: upload-release-asset-linux
+        if: steps.check_release.outputs.release_id == '0'
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,26 +109,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./x86_64-unknown-linux-gnu/gar
           asset_name: gar-x86_64-unknown-linux-gnu
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset
-        id: upload-release-asset-mac
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./x86_64-apple-darwin/gar
-          asset_name: gar-x86_64-apple-darwin
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset
-        id: upload-release-asset-windows
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./x86_64-pc-windows-msvc/gar.exe
-          asset_name: gar-x86_64-pc-windows-msvc.exe
           asset_content_type: application/octet-stream
