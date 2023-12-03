@@ -17,18 +17,18 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "::set-output name=version::$(cat version)"
+        run: echo "version=$(cat version)" >> $GITHUB_ENV
 
       - name: Check if release exists
         id: check_release
         run: |
-          RESPONSE_CODE=$(curl --write-out "%{http_code}" --silent --output /dev/null "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/v${{ steps.version.outputs.version }}")
+          RESPONSE_CODE=$(curl --write-out "%{http_code}" --silent --output /dev/null "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/v${{ env.version }}")
           if [ "$RESPONSE_CODE" -eq 200 ]; then
-            echo "::set-output name=exists::true"
-            echo "Release v${{ steps.version.outputs.version }} already exists. Exiting."
+            echo "exists=true" >> $GITHUB_ENV
+            echo "Release v${{ env.version }} already exists. Exiting."
             exit 1
           else
-            echo "::set-output name=exists::false"
+            echo "exists=false" >> $GITHUB_ENV
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -82,20 +82,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download artifacts
-        if: steps.check_release.outputs.release_id == '0'
         uses: actions/download-artifact@v3
 
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
+          tag_name: v${{ env.version }}
+          name: Release v${{ env.version }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset
-        if: steps.check_release.outputs.release_id == '0'
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
