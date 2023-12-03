@@ -10,35 +10,50 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Workflow {
-    id: String,
+    id: u64,
     name: String,
     html_url: String,
 }
 
 async fn github_request(url: &str, token: &str, method: &str, data: Option<serde_json::Value>) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let client = Client::new();
+    let proxy = reqwest::Proxy::all("http://127.0.0.1:4034")?; // Замените на адрес вашего прокси
+    let client = Client::builder()
+        .danger_accept_invalid_certs(true)
+        .proxy(proxy)
+        .build()?;
 
     let response = match method {
         "POST" => client.post(url)
             .header("Accept", "application/vnd.github.v3+json")
             .header("Authorization", format!("token {}", token))
+            .header("User-Agent", "GAR")
             .json(&data.unwrap())
             .send()
             .await?,
         _ => client.get(url)
             .header("Accept", "application/vnd.github.v3+json")
             .header("Authorization", format!("token {}", token))
+            .header("User-Agent", "GAR")
             .send()
             .await?,
     };
 
-    let data: serde_json::Value = response.json().await?;
+    let response_text = response.text().await?;
+    println!("Response text: {}", response_text);
+
+    if response_text.trim().is_empty() {
+        return Ok(serde_json::Value::Null);
+    }
+
+    let data: serde_json::Value = serde_json::from_str(&response_text)?;
+
+    println!("{}", data);
     Ok(data)
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = env::var("CTIM_TOKEN").unwrap_or_else(|_| {
+    let token = env::var("GAR_TOKEN").unwrap_or_else(|_| {
         if fs::metadata(".github_token").is_ok() {
             fs::read_to_string(".github_token").unwrap()
         } else {
@@ -53,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let repo = get_git_repo()?;
     let ref_name = get_git_tree_name()?;
 
-    let url = format!("https://api.github.com/repos/{}/actions/workflows", owner);
+    let url = format!("https://api.github.com/repos/{}/{}/actions/workflows", owner, repo);
     let workflows_data = github_request(&url, &token, "GET", None).await?;
     let workflows: Vec<Workflow> = serde_json::from_value(workflows_data["workflows"].clone())?;
 
@@ -82,9 +97,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     if confirm {
-        let url = format!("https://api.github.com/repos/{}/actions/workflows/{}/dispatches", owner, workflow.id);
+        let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/dispatches", owner, repo, workflow.id);
         let _ = github_request(&url, &token, "POST", Some(json!({ "ref": ref_name }))).await?;
-        println!("GitHub action successfully triggered.\nActions: https://github.com/{}/actions\nTree: https://github.com/{}/tree/{}", owner, repo, ref_name);
+        println!("GitHub action successfully triggered.\nActions: https://github.com/{}/{}/actions\nTree: https://github.com/{}/tree/{}", owner, repo, repo, ref_name);
     } else {
         println!("{}", "Cancel".red());
     }
