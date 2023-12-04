@@ -46,7 +46,7 @@ jobs:
         rust:
           - stable
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             targets: i686-unknown-linux-gnu,x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
           - os: windows-latest
             targets: x86_64-pc-windows-msvc,i686-pc-windows-msvc
