@@ -42,11 +42,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust:
           - stable
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             targets: i686-unknown-linux-gnu,x86_64-unknown-linux-gnu
           - os: windows-latest
             targets: x86_64-pc-windows-msvc,i686-pc-windows-msvc
@@ -85,7 +85,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib
+          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev
         shell: bash
 
       - name: Build
