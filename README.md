@@ -2,11 +2,11 @@
 
 ## Description
 
-`gar` (GitHub Actions Runner) is a console utility written in Rust for working with GitHub Actions. It allows you to trigger GitHub Actions workflows right from your command line.
+`gar` (GitHub Actions Runner) is a command-line utility written in Rust for working with GitHub Actions. It allows you to run GitHub Actions workflows directly from the command line.
 
 ## Installation
 
-You can download the pre-compiled binary from the [Releases](https://github.com/s00d/github-action-runner/releases) page on GitHub. Choose the version that suits your operating system and architecture.
+You can download a precompiled binary from the [Releases page](https://github.com/s00d/github-action-runner/releases) on GitHub. Choose the version that matches your operating system and architecture.
 
 If you want to compile the project from source, follow these steps:
 
@@ -16,24 +16,24 @@ cd gar
 cargo build --release
 ```
 
-This will create an executable file `gar` in the `target/release` directory.
+This will create an executable `gar` file in the `target/release` directory.
 
 ## Usage
 
 ### Preparation
 
-Before using the `gar` utility, you need to obtain a GitHub token. This can be done in the settings of your GitHub account. The token should have the following permissions:
+Before using the `gar` utility, you need to obtain a GitHub token. This can be done in the settings of your account on GitHub. The token should have the following permissions:
 
--  Read access to `code` and `metadata`
--  Read and Write access to `actions`, `administration`, and `workflows`
+-  Read `code` and `metadata`
+-  Read and write `actions`, `administration`, and `workflows`
 
 Save the token in a `.github_token` file in the root directory of the project or set it as an environment variable `GAR_TOKEN`.
 
-The utility will first look for the `GAR_TOKEN` environment variable. If it's not found, it will then look for the `.github_token` file. If neither is found, it will prompt you to enter the token manually.
+The utility will first look for the `GAR_TOKEN` environment variable. If it is not found, it will then look for the `.github_token` file. If neither is found, it will prompt you to enter the token manually.
 
 ### Running Workflows
 
-To trigger a workflow, simply run the `gar` executable. The utility will automatically determine the owner and repository name based on the `origin` remote repository in your local Git repository. It will then prompt you to select a workflow to trigger from a list of available workflows in your repository.
+To run a workflow, simply execute the `gar` file. The utility will automatically determine the owner and repository name based on the `origin` remote repository in your local Git repository. It will then prompt you to select a workflow to run from a list of available workflows in your repository.
 
 ### Global Usage
 
@@ -50,14 +50,42 @@ On **Windows**:
 1. Open "System" in Control Panel.
 2. Click on "Advanced system settings".
 3. "Advanced" tab > "Environment Variables".
-4. Under "System variables" select "Path" > "Edit".
+4. In the "System variables" section, select "Path" > "Edit".
 5. "New" > Enter the path to the directory where the **gar** executable is located.
 6. Now you can run gar from anywhere in the command line.
 
-
-
 Now you can run `gar` from anywhere in the command line.
 
+## History Command
+
+The `gar history` command provides a historical record of the runs of a selected workflow. Here's an example of how you might use it:
+
+```bash
+$ gar history
+```
+
+When you run this command, it will first prompt you to select a workflow from your repository. After you select a workflow, it will fetch and display the last 10 runs of the selected workflow in a table format.
+
+Here's an example of what the output might look like:
+
+```text
+ID         Branch   Status   Conclusion   Created At              Updated At              Url
+123456789  main     completed success      2023-04-12T23:05:34Z   2023-04-12T23:06:00Z   https://github.com/owner/repo/actions/runs/123456789
+987654321  feature  completed failure      2023-04-12T22:05:34Z   2023-04-12T22:06:00Z   https://github.com/owner/repo/actions/runs/987654321
+...
+
+```
+
+Each row in the table represents a single run of the workflow. The columns provide the following information:
+
+- `ID`: The unique identifier of the run.
+- `Branch`: The branch where the run was triggered.
+- `Status`: The status of the run (e.g., `completed`, `in_progress`, `queued`).
+- `Conclusion`: The outcome of the run if it has completed (e.g., `success`, `failure`). If the run is not yet completed, this field will show `N/A`.
+- `Created At`: The time when the run was created.
+- `Updated At`: The time when the run was last updated.
+- `Url`: The URL where you can view the run on GitHub.
+- 
 ## License
 
 `gar` is distributed under the MIT license. See the `LICENSE` file for details.

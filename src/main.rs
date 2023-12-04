@@ -138,13 +138,13 @@ async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name: &str) -> R
             match get_workflow_run(owner, repo, run_id, token).await? {
                 Some(run) => {
                     match run.status.as_str() {
-                        "completed" => {
+                        "completed" | "failure" => {
                             let pb = pb.lock().await;
                             pb.finish_with_message("GitHub action completed");
                             println!("");
                             println!("GitHub action completed with conclusion: {}", run.conclusion.clone().unwrap_or_else(|| "unknown".to_string()));
                             break;
-                        }
+                        },
                         _ => {
 
                         }
