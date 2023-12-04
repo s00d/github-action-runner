@@ -71,6 +71,13 @@ jobs:
       - name: Install cross
         run: cargo install cross
 
+      - name: Install Perl and Locale::Maketext::Simple
+        shell: bash
+        run: |
+          choco install strawberryperl
+          echo 'export PATH="/c/Strawberry/perl/bin:$PATH"' >> $GITHUB_ENV
+          cpan Locale::Maketext::Simple
+
       - name: Build
         shell: bash
         run: |
