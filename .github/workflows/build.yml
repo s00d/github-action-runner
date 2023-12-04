@@ -66,12 +66,12 @@ jobs:
           targets: ${{ matrix.target }}
           components: rustfmt, clippy
 
-      - name: Install cross
-        run: cargo install cross
-
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ inputs.cache-key }}
+
+      - name: Install cross
+        run: cargo install cross
 
       - name: Build
         run: cross build --release --bin gar --target ${{ matrix.target }}
