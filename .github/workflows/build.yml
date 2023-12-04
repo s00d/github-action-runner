@@ -64,7 +64,10 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
-          components: rustfmt, clippy, cross
+          components: rustfmt, clippy
+
+      - name: Install cross
+        run: cargo install cross
 
       - uses: Swatinem/rust-cache@v2
         with:
