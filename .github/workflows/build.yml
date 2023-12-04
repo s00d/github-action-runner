@@ -22,10 +22,6 @@ jobs:
         id: version
         run: echo "version=$(grep '^version' ./Cargo.toml | sed 's/version = //g' | tr -d '\"')" >> $GITHUB_ENV
 
-      - name: Read version env
-        id: version-read
-        run: echo "{{ env.version }}"
-
       - name: Check if release exists
         id: check_release
         run: |
@@ -132,3 +128,48 @@ jobs:
             gar-*/*/release/gar-*
             LICENSE
             VERSION
+
+  homebrew:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(grep '^version' ./Cargo.toml | sed 's/version = //g' | tr -d '\"')" >> $GITHUB_ENV
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'Your Name'
+          git config --global user.email 'youremail@example.com'
+
+      - name: Create Homebrew formula
+        run: |
+          cat <<- EOF > homebrew-repo/Formula/github-action-runner.rb
+          class GithubActionRunner < Formula
+            desc "GitHub Action Runner"
+            homepage "https://github.com/s00d/github-action-runner"
+            version "${{ env.version }}"
+
+            if Hardware::CPU.intel?
+              url "https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-x86_64-apple-darwin"
+              sha256 "put_the_sha256_for_x86_64_here"
+            elsif Hardware::CPU.arm?
+              url "https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-aarch64-apple-darwin"
+              sha256 "put_the_sha256_for_aarch64_here"
+            end
+
+            def install
+              bin.install "github-action-runner"
+            end
+          end
+          EOF
+
+      - name: Push Homebrew formula
+        run: |
+          cd homebrew-repo
+          git add Formula/github-action-runner.rb
+          git commit -m "Bump github-action-runner to ${{ env.version }}"
+          git push
