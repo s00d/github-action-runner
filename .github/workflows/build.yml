@@ -72,6 +72,7 @@ jobs:
         run: cargo install cross
 
       - name: Install Perl and Locale::Maketext::Simple
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           choco install strawberryperl
