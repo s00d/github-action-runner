@@ -74,7 +74,7 @@ jobs:
           for TARGET in $(echo ${{ matrix.targets }} | tr "," "\n")
           do
             rustup target add $TARGET
-            rustup build --release --bin gar --target $TARGET
+            cargo build --release --bin gar --target $TARGET
             mv target/$TARGET/release/gar${{ runner.os == 'Windows' && '.exe' || '' }} target/$TARGET/release/gar-$TARGET${{ runner.os == 'Windows' && '.exe' || '' }}
           done
 
