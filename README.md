@@ -43,6 +43,7 @@ On **Linux** or **macOS**:
 
 ```bash
 sudo mv gar /usr/local/bin/
+chmod +x /usr/local/bin/gar
 ```
 
 On **Windows**:
