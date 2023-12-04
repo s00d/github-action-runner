@@ -39,12 +39,21 @@ To run a workflow, simply execute the `gar` file. The utility will automatically
 
 To make the `gar` executable globally available, you can move it to a directory that is in your `PATH`.
 
-On **Linux** or **macOS**:
+On **Linux**:
 
 ```bash
 sudo mv gar /usr/local/bin/
 chmod +x /usr/local/bin/gar
 ```
+
+On  **macOS**:
+
+```bash
+sudo mv gar /usr/local/bin/
+chmod +x /usr/local/bin/gar
+xattr -cr /usr/local/bin/gar
+```
+
 
 On **Windows**:
 
