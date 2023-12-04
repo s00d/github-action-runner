@@ -68,18 +68,6 @@ jobs:
         with:
           shared-key: ${{ inputs.cache-key }}
 
-      - name: Set up Perl
-        if: runner.os == 'Windows'
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.34'
-
-      - name: Check Perl version
-        if: runner.os == 'Windows'
-        run: |
-          perl -v
-        shell: bash
-
       - name: Add architectures for dpkg
         if: runner.os == 'Linux'
         run: |
@@ -123,21 +111,10 @@ jobs:
         id: version
         run: echo "version=$(cat version)" >> $GITHUB_ENV
 
-      - name: Rename and Move files
-        shell: bash
-        run: |
-          for DIR in target/*; do
-          if [ -d "$DIR" ]; then
-           TARGET=$(basename $DIR)
-           EXTENSION=""
-           if [[ $TARGET == *"windows"* ]]; then
-             EXTENSION=".exe"
-           fi
-           if [ -f $DIR/release/gar$EXTENSION ]; then
-             mv $DIR/release/gar$EXTENSION gar-$TARGET$EXTENSION
-           fi
-          fi
-          done
+      - name: Read
+        id: read
+        run: | 
+          ls -a
 
       - name: Create Release
         id: create_release
@@ -148,8 +125,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            gar-*.exe
-            gar-*
+            gar-*/*/*/gar-*
             LICENSE
             VERSION
 
