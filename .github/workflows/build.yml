@@ -98,6 +98,20 @@ jobs:
             fi
           done
 
+      - name: Prepare files string
+        id: prepare_files_string
+        run: |
+          IFS=',' read -ra TARGET_ARRAY <<< "$TARGETS"
+          files_string=""
+          for target in "${TARGET_ARRAY[@]}"; do
+            if [[ $target == *"windows"* ]]; then
+              files_string+="gar-$target.exe\n"
+            else
+              files_string+="gar-$target\n"
+            fi
+          done
+          echo "FILES_STRING=$files_string" >> $GITHUB_ENV
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -107,7 +121,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ${{ join(env.TARGETS.split(','), '\n') }}
+            ${{ env.FILES_STRING }}
             LICENSE
             VERSION
 
