@@ -78,8 +78,8 @@ jobs:
       - name: Add architectures for dpkg
         if: runner.os == 'Linux'
         run: |
-          dpkg --add-architecture i386
-          dpkg --add-architecture arm64
+          sudo dpkg --add-architecture i386
+          sudo dpkg --add-architecture arm64
         shell: bash
 
       - name: Build
