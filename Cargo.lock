@@ -280,6 +280,7 @@ dependencies = [
  "colored",
  "dialoguer",
  "git2",
+ "libz-sys",
  "openssl",
  "regex",
  "reqwest",
