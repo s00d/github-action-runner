@@ -87,6 +87,12 @@ jobs:
         id: version
         run: echo "version=$(cat version)" >> $GITHUB_ENV
 
+      - name: Rename files
+        run: |
+          mv x86_64-unknown-linux-gnu/gar gar-x86_64-unknown-linux-gnu
+          mv x86_64-apple-darwin/gar gar-x86_64-apple-darwin
+          mv x86_64-pc-windows-msvc/gar.exe gar-x86_64-pc-windows-msvc.exe
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -96,9 +102,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ./x86_64-unknown-linux-gnu/gar
-            ./x86_64-apple-darwin/gar
-            ./x86_64-pc-windows-msvc/gar.exe
+            gar-x86_64-unknown-linux-gnu
+            gar-x86_64-apple-darwin
+            gar-x86_64-pc-windows-msvc.exe
             LICENSE
             VERSION
 
