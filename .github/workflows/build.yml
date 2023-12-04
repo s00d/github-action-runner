@@ -130,7 +130,7 @@ jobs:
             VERSION
 
   homebrew:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: release
     steps:
       - name: Check out code
@@ -140,13 +140,20 @@ jobs:
         id: version
         run: echo "version=$(cat version)" >> $GITHUB_ENV
 
-      - uses: mislav/bump-homebrew-formula-action@v3
-        with:
-          formula-name: github-action-runner
-          formula-path: Formula/m/github-action-runner.rb
-          tag-name: ${{ env.version }}
-          download-url: https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-aarch64-apple-darwin
-          commit-message: |
-            {{formulaName}} {{env.version}}
+      - name: Install Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      - name: Bump Homebrew formula for aarch64
+        run: |
+          brew tap homebrew/core
+          brew bump-formula-pr --url=https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-aarch64-apple-darwin --version=${{ env.version }} github-action-runner
         env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump Homebrew formula for x86_64
+        run: |
+          brew tap homebrew/core
+          brew bump-formula-pr --url=https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-x86_64-apple-darwin --version=${{ env.version }} github-action-runner
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
