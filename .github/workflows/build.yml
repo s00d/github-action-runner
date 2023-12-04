@@ -63,6 +63,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
+          targets: ${{ matrix.target }}
           components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v2
