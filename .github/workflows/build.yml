@@ -125,7 +125,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            gar-*/*/*/gar-*
+            gar-*/*/release/gar-*
             LICENSE
             VERSION
 
@@ -145,7 +145,7 @@ jobs:
           formula-name: github-action-runner
           formula-path: Formula/m/github-action-runner.rb
           tag-name: ${{ env.version }}
-          download-url: https://example.com/packages/myformula-${{ env.version }}.tar.gz
+          download-url: https://github.com/s00d/github-action-runner/releases/download/v${{ env.version }}/gar-aarch64-apple-darwin
           commit-message: |
             {{formulaName}} {{env.version}}
         env:
