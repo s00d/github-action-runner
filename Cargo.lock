@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "github-action-runner"
-version = "1.0.46"
+version = "1.0.47"
 dependencies = [
  "clap",
  "colored",
