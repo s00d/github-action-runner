@@ -1,5 +1,7 @@
 # GitHub Actions Runner
 
+![img](https://github.com/s00d/github-action-runner/blob/main/assets/2023-12-04%2022.57.59.gif?raw=true)
+
 ## Description
 
 `gar` (GitHub Actions Runner) is a command-line utility written in Rust for working with GitHub Actions. It allows you to run GitHub Actions workflows directly from the command line.
