@@ -64,14 +64,14 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
-          components: rustfmt, clippy
+          components: rustfmt, clippy, cross
 
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ inputs.cache-key }}
 
       - name: Build
-        run: cargo build --release --bin gar --target ${{ matrix.target }}
+        run: cross build --release --bin gar --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
