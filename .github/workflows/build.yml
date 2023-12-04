@@ -42,14 +42,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust:
           - stable
         include:
           - os: ubuntu-latest
             targets: i686-unknown-linux-gnu,x86_64-unknown-linux-gnu
           - os: windows-latest
-            targets: x86_64-pc-windows-msvc,i686-pc-windows-msvc
+            targets: x86_64-pc-windows-msvc
           - os: macos-latest
             targets: x86_64-apple-darwin,aarch64-apple-darwin
 
@@ -78,13 +78,6 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           perl -v
-        shell: bash
-
-      - name: Install CPAN module
-        if: runner.os == 'Windows'
-        run: |
-          curl -L https://cpanmin.us | perl - App::cpanminus
-          cpanm Locale::Maketext::Simple
         shell: bash
 
       - name: Add architectures for dpkg
