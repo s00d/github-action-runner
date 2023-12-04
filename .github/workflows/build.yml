@@ -73,6 +73,7 @@ jobs:
         run: |
           choco install strawberryperl
           echo 'export PATH="/c/Strawberry/perl/bin:$PATH"' >> $GITHUB_ENV
+          perl -MCPAN -e 'install Locale::Maketext::Simple'
         shell: bash
 
       - name: Add architectures for dpkg
