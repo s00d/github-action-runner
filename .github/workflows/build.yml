@@ -68,6 +68,13 @@ jobs:
         with:
           shared-key: ${{ inputs.cache-key }}
 
+      - name: Install Perl and Locale::Maketext::Simple
+        if: runner.os == 'Windows'
+        run: |
+          choco install strawberryperl
+          echo 'export PATH="/c/Strawberry/perl/bin:$PATH"' >> $GITHUB_ENV
+        shell: bash
+
       - name: Build
         shell: bash
         run: |
