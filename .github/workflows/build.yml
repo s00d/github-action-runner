@@ -68,13 +68,23 @@ jobs:
         with:
           shared-key: ${{ inputs.cache-key }}
 
-      - name: Install Perl and Locale::Maketext::Simple
+      - name: Set up Perl
+        if: runner.os == 'Windows'
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: '5.32'
+
+      - name: Check Perl version
         if: runner.os == 'Windows'
         run: |
-          choco install strawberryperl
-          echo 'export PATH="/c/Strawberry/perl/bin:$PATH"' >> $GITHUB_ENV
-          perl -MCPAN -e 'install Locale::Maketext::Simple'
+          perl -v
         shell: bash
+
+#      - name: Install CPAN module
+#        if: runner.os == 'Windows'
+#        run: |
+#          cpan -i Locale::Maketext::Simple
+#        shell: bash
 
       - name: Add architectures for dpkg
         if: runner.os == 'Linux'
