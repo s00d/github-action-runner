@@ -82,6 +82,13 @@ jobs:
           sudo dpkg --add-architecture arm64
         shell: bash
 
+      - name: Install multilib dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+        shell: bash
+
       - name: Build
         shell: bash
         run: |
