@@ -1,13 +1,15 @@
+use std::io::{Cursor, Read};
 use std::sync::Arc;
 use colored::Colorize;
 use dialoguer::{Confirm, Select};
 use dialoguer::theme::ColorfulTheme;
 use indicatif::{ProgressBar, ProgressStyle};
 use prettytable::{Cell, format, row, Row, Table};
-use reqwest::Client;
+use reqwest::{Client, Response};
 use serde::Deserialize;
 use serde_json::json;
 use tokio::sync::Mutex;
+use zip::ZipArchive;
 use crate::cli::update_progress_bar;
 
 #[derive(Deserialize, Clone)]
@@ -17,21 +19,65 @@ struct Workflow {
     html_url: String,
 }
 
-#[derive(Deserialize)]
-struct WorkflowRun {
-    id: u64,
-    html_url: String,
-    status: String,
-    conclusion: Option<String>,
-    head_branch: String,
-    created_at: String,
-    updated_at: String,
+#[derive(Deserialize, Clone)]
+pub(crate) struct WorkflowRun {
+    pub(crate) id: u64,
+    pub(crate) name: String,
+    pub(crate) display_title: String,
+    pub(crate) html_url: String,
+    pub(crate) status: String,
+    pub(crate) conclusion: Option<String>,
+    pub(crate) head_branch: String,
+    pub(crate) logs_url: String,
+    pub(crate) created_at: String,
+    pub(crate) updated_at: String,
+}
+
+pub fn unzip_and_concatenate(data_bytes: Vec<u8>) -> Result<String, Box<dyn std::error::Error>> {
+    let cursor = Cursor::new(data_bytes);
+    let mut archive = ZipArchive::new(cursor)?;
+
+    let mut result = String::new();
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let file_name = file.name().to_string();
+
+        // Пропустить файлы в поддиректориях, пока не обработаем все файлы в корне
+        if file_name.contains("/") {
+            continue;
+        }
+
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        result.push_str(&contents);
+    }
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let file_name = file.name().to_string();
+
+        // Теперь обрабатываем только файлы в поддиректориях
+        if !file_name.contains("/") {
+            continue;
+        }
+
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        result.push_str("\n");
+        result.push_str("--------------\n");
+        result.push_str(&file_name);
+        result.push_str("\n--------------\n");
+        result.push_str(&contents);
+    }
+
+    Ok(result)
 }
 
 
 async fn select_workflow(token: &str, owner: &str, repo: &str) -> Result<Workflow, Box<dyn std::error::Error>> {
     let url = format!("https://api.github.com/repos/{}/{}/actions/workflows", owner, repo);
-    let workflows_data = github_request(&url, &token, "GET", None).await?;
+    let workflows_data = github_request(&url, &token, "GET", None, None).await?;
     let workflows: Vec<Workflow> = serde_json::from_value(workflows_data["workflows"].clone())?;
 
     let workflow_names: Vec<String> = workflows.iter().map(|wf| {
@@ -49,54 +95,116 @@ async fn select_workflow(token: &str, owner: &str, repo: &str) -> Result<Workflo
         .with_prompt("Select a workflow:")
         .items(&workflow_names)
         .default(0)
-        .interact()
-        .unwrap();
+        .interact()?;
 
     Ok(workflows[selected].clone())
 }
 
-async fn github_request(url: &str, token: &str, method: &str, data: Option<serde_json::Value>) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+async fn select_run(token: &str, owner: &str, repo: &str, workflow_id: u64) -> Result<WorkflowRun, Box<dyn std::error::Error>> {
+    let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/runs", owner, repo, workflow_id);
+    let runs_data = github_request(&url, &token, "GET", None, None).await?;
+    let runs: Vec<WorkflowRun> = serde_json::from_value(runs_data["workflow_runs"].clone())?;
+
+    let run_ids: Vec<String> = runs.iter().map(|run| {
+        let id = run.id.to_string();
+        let name = &run.name;
+        let date = &run.created_at; // предполагая, что у вас есть поле created_at в типе WorkflowRun
+        let status = match run.status.as_str() {
+            "completed" => format!("{} - {} - {}", name, date, id).green().to_string(),
+            "in_progress" => format!("{} - {} - {}", name, date, id).yellow().to_string(),
+            "queued" => format!("{} - {} - {}", name, date, id).blue().to_string(),
+            _ => format!("{} - {} - {}", name, date, id).white().to_string(),
+        };
+        status
+    }).collect();
+
+    let selected = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select a run:")
+        .items(&run_ids)
+        .default(0)
+        .interact()?;
+
+    Ok(runs[selected].clone())
+}
+
+pub async fn github_request(
+    url: &str,
+    token: &str,
+    method: &str,
+    data: Option<serde_json::Value>,
+    accept: Option<&str>
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let response = github_request_fn(url, token, method, data, accept).await?;
+    let response_text = &response.text().await?;
+
+    if response_text.trim().is_empty() {
+        return Ok(serde_json::Value::Null);
+    }
+
+    let data: serde_json::Value = serde_json::from_str(response_text)?;
+    Ok(data)
+}
+
+pub async fn github_request_bytes(
+    url: &str,
+    token: &str,
+    method: &str,
+    data: Option<serde_json::Value>,
+    accept: Option<&str>
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let response = github_request_fn(url, token, method, data, accept).await?;
+
+    let response_bytes = response.bytes().await?;
+
+    Ok(response_bytes.to_vec())
+}
+
+pub async fn github_request_fn(
+    url: &str,
+    token: &str,
+    method: &str,
+    data: Option<serde_json::Value>,
+    accept: Option<&str>
+) -> Result<Response, Box<dyn std::error::Error>> {
+    let proxy = reqwest::Proxy::all("http://127.0.0.1:4034")?;
     let client = Client::builder()
+        .proxy(proxy)
+        .redirect(reqwest::redirect::Policy::limited(10))
         .danger_accept_invalid_certs(true)
         .build()?;
 
+    let accept_header = accept.unwrap_or("application/vnd.github.v3+json");
+
     let response = match method {
         "POST" => client.post(url)
-            .header("Accept", "application/vnd.github.v3+json")
+            .header("Accept", accept_header)
             .header("Authorization", format!("token {}", token))
             .header("User-Agent", "GAR")
             .json(&data.unwrap())
             .send()
             .await?,
         _ => client.get(url)
-            .header("Accept", "application/vnd.github.v3+json")
+            .header("Accept", accept_header)
             .header("Authorization", format!("token {}", token))
             .header("User-Agent", "GAR")
             .send()
             .await?,
     };
 
-    let response_text = response.text().await?;
-
-    if response_text.trim().is_empty() {
-        return Ok(serde_json::Value::Null);
-    }
-
-    let data: serde_json::Value = serde_json::from_str(&response_text)?;
-    Ok(data)
+    Ok(response)
 }
 
 
 async fn get_workflow_runs(owner: &str, repo: &str, workflow_id: u64, token: &str) -> Result<Vec<WorkflowRun>, Box<dyn std::error::Error>> {
     let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/runs", owner, repo, workflow_id);
-    let data = github_request(&url, token, "GET", None).await?;
+    let data = github_request(&url, token, "GET", None, None).await?;
     let runs: Vec<WorkflowRun> = serde_json::from_value(data["workflow_runs"].clone())?;
     Ok(runs)
 }
 
-async fn get_workflow_run(owner: &str, repo: &str, run_id: u64, token: &str) -> Result<Option<WorkflowRun>, Box<dyn std::error::Error>> {
+pub(crate) async fn get_workflow_run(owner: &str, repo: &str, run_id: u64, token: &str) -> Result<Option<WorkflowRun>, Box<dyn std::error::Error>> {
     let url = format!("https://api.github.com/repos/{}/{}/actions/runs/{}", owner, repo, run_id);
-    let data = github_request(&url, token, "GET", None).await?;
+    let data = github_request(&url, token, "GET", None, None).await?;
     if data.is_null() {
         Ok(None)
     } else {
@@ -109,12 +217,11 @@ pub(crate) async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name:
 
     let confirm = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(&format!("Run \"{}\"({}) action in \"{}\" tree?", workflow.name, workflow.html_url, ref_name))
-        .interact()
-        .unwrap();
+        .interact()?;
 
     if confirm {
         let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/dispatches", owner, repo, workflow.id);
-        let _ = github_request(&url, &token, "POST", Some(json!({ "ref": ref_name }))).await?;
+        let _ = github_request(&url, &token, "POST", Some(json!({ "ref": ref_name })), None).await?;
 
         println!("GitHub action successfully triggered.");
         println!("Actions: https://github.com/{}/{}/actions", owner, repo);
@@ -166,6 +273,29 @@ pub(crate) async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name:
     Ok(())
 }
 
+pub(crate) async fn show_details(token: &str, owner: &str, repo: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let workflow = select_workflow(token, owner, repo).await?;
+    let run = select_run(token, owner, repo, workflow.id).await?;
+
+    println!("ID: {}", run.id);
+    println!("Name: {}", run.name);
+    println!("Display Title: {}", run.display_title);
+    println!("URL: {}", run.html_url);
+    println!("Status: {}", run.status);
+    println!("Conclusion: {}", run.conclusion.unwrap_or_else(|| "N/A".to_string()));
+    println!("Branch: {}", run.head_branch);
+    println!("Created At: {}", run.created_at);
+    println!("Updated At: {}", run.updated_at);
+
+    let logs_data = github_request_bytes(run.logs_url.as_str(), &token, "GET", None, Some("application/vnd.github+json")).await?;
+    let logs = unzip_and_concatenate(logs_data.clone());
+    println!("Logs: \n{}", logs.unwrap());
+
+    // https://api.github.com/repos/s00d/github-action-runner/actions/runs/7090586915/logs
+    // https://api.github.com/repos/s00d/github-action-runner/actions/runs/7090586915/logs
+
+    Ok(())
+}
 
 pub(crate) async fn show_history(token: &str, owner: &str, repo: &str) -> Result<(), Box<dyn std::error::Error>> {
     let workflow = select_workflow(token, owner, repo).await?;

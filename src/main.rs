@@ -7,7 +7,7 @@ use std::fs;
 use dialoguer::{Input, theme::ColorfulTheme};
 use clap::{Command};
 use git::{get_git_owner, get_git_repo, get_git_tree_name};
-use github::{run_workflow, show_history};
+use github::{run_workflow, show_history, show_details};
 
 
 #[tokio::main]
@@ -18,20 +18,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .subcommand(
             Command::new("history")
                 .about("Shows the history of workflow runs"),
+        ).subcommand(
+            Command::new("details")
+                .about("Shows the details of workflow run"),
         );
 
     let matches = cmd.get_matches();
 
-    let token = env::var("GAR_TOKEN").unwrap_or_else(|_| {
-        if fs::metadata(".github_token").is_ok() {
-            fs::read_to_string(".github_token").unwrap()
-        } else {
-            Input::<String>::with_theme(&ColorfulTheme::default())
-                .with_prompt("Enter github token")
-                .interact()
-                .unwrap()
+    let token = match env::var("GAR_TOKEN") {
+        Ok(val) => val,
+        Err(_) => {
+            if fs::metadata(".github_token").is_ok() {
+                fs::read_to_string(".github_token")?
+            } else {
+                Input::<String>::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Enter github token")
+                    .interact()?
+            }
         }
-    });
+    };
 
     let owner = get_git_owner()?;
     let repo = get_git_repo()?;
@@ -45,6 +50,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some(("history", _)) => {
             // Запустите функцию, которая показывает историю запусков
             show_history(&token, &owner, &repo).await?;
+        }
+        Some(("details", _)) => {
+            show_details(&token, &owner, &repo).await?;
         }
         _ => {
             run_workflow(&token, &owner, &repo, &ref_name).await?;

@@ -1,6 +1,6 @@
 [package]
 name = "github-action-runner"
-version = "1.0.47"
+version = "1.0.48"
 edition = "2021"
 
 [[bin]]
@@ -23,3 +23,4 @@ libz-sys = { version = "1.1.0", default-features = false, features = ["libc"] }
 clap = "4.4.10"
 prettytable-rs = "0.10.0"
 indicatif = "0.17.7"
+zip = "0.6.6"
