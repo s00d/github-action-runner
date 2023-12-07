@@ -20,6 +20,19 @@ cargo build --release
 
 This will create an executable `gar` file in the `target/release` directory.
 
+## crates.io
+
+You can install the `github-action-runner` package using the `cargo` utility. Make sure you have Rust compiler and `cargo` tool installed.
+
+1. Open a terminal or command prompt.
+
+2. Run the following command to install the package:
+
+```shell
+cargo install github-action-runner
+```
+
+
 ## Usage
 
 ### Preparation
