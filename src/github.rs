@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 use colored::Colorize;
@@ -166,9 +167,9 @@ pub async fn github_request_fn(
     data: Option<serde_json::Value>,
     accept: Option<&str>
 ) -> Result<Response, Box<dyn std::error::Error>> {
-    let proxy = reqwest::Proxy::all("http://127.0.0.1:4034")?;
+    // let proxy = reqwest::Proxy::all("http://127.0.0.1:4034")?;
     let client = Client::builder()
-        .proxy(proxy)
+        // .proxy(proxy)
         .redirect(reqwest::redirect::Policy::limited(10))
         .danger_accept_invalid_certs(true)
         .build()?;
@@ -212,7 +213,7 @@ pub(crate) async fn get_workflow_run(owner: &str, repo: &str, run_id: u64, token
         Ok(Some(run))
     }
 }
-pub(crate) async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name: &str, inputs_collect: HashMap<&str, &str>) -> Result<(), Box<dyn std::error::Error>> {
     let workflow = select_workflow(token, owner, repo).await?;
 
     let confirm = Confirm::with_theme(&ColorfulTheme::default())
@@ -221,7 +222,7 @@ pub(crate) async fn run_workflow(token: &str, owner: &str, repo: &str, ref_name:
 
     if confirm {
         let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/dispatches", owner, repo, workflow.id);
-        let _ = github_request(&url, &token, "POST", Some(json!({ "ref": ref_name })), None).await?;
+        let _ = github_request(&url, &token, "POST", Some(json!({ "ref": ref_name, "inputs": inputs_collect })), None).await?;
 
         println!("GitHub action successfully triggered.");
         println!("Actions: https://github.com/{}/{}/actions", owner, repo);
