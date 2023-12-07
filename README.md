@@ -22,6 +22,20 @@ This will create an executable `gar` file in the `target/release` directory.
 
 ## crates.io
 
+Before installing the `github-action-runner` package, you need to install Rust. Rust is a programming language that the package is built with. Here are the steps to install Rust:
+
+1. Open a terminal or command prompt.
+
+2. Visit the official Rust website at [https://www.rust-lang.org/](https://www.rust-lang.org/).
+
+3. Follow the instructions on the website to download and install Rust for your operating system.
+
+4. After the installation is complete, verify that Rust is installed correctly by running the following command in your terminal:
+
+```shell
+rustc --version
+```
+
 You can install the `github-action-runner` package using the `cargo` utility. Make sure you have Rust compiler and `cargo` tool installed.
 
 1. Open a terminal or command prompt.
@@ -110,7 +124,11 @@ Each row in the table represents a single run of the workflow. The columns provi
 - `Created At`: The time when the run was created.
 - `Updated At`: The time when the run was last updated.
 - `Url`: The URL where you can view the run on GitHub.
-- 
+
+## Help
+
+For more information about the available commands and options, you can refer to the package documentation or run github-action-runner --help in your terminal.
+
 ## License
 
 `gar` is distributed under the MIT license. See the `LICENSE` file for details.
