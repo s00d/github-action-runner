@@ -2,10 +2,18 @@
 name = "github-action-runner"
 version = "1.0.48"
 edition = "2021"
+authors = ["s00d <Virus191288@gmail.com>"]
+description = "command-line utility written in Rust for working with GitHub Actions"
+repository = "https://github.com/s00d/github-action-runner"
+license = "MIT"
 
 [[bin]]
 name = "gar"
 path = "src/main.rs"
+
+[lib]
+name = "gar"
+path = "src/lib.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
