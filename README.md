@@ -107,6 +107,13 @@ Now you can run `gar` from anywhere in the command line.
 
 Please note that all the parameters are optional, and if not provided, default values will be used.
 
+```
+gar --ref <branch-name>
+gar --owner <owner-name> --repo <repository-name>
+gar --token <personal-access-token>
+gar --inputs <input-name1>=<value1>,<input-name2>=<value2>
+```
+
 ## History Command
 
 The `gar history` command provides a historical record of the runs of a selected workflow. Here's an example of how you might use it:
