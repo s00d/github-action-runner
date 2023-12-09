@@ -95,6 +95,18 @@ On **Windows**:
 
 Now you can run `gar` from anywhere in the command line.
 
+## Args
+
+| Argument   | Short | Description                                                                                          | Default Value                           |
+|------------|-------|------------------------------------------------------------------------------------------------------|-----------------------------------------|
+| `--ref`    | `-r`  | The name of the repository branch on which the action will be run.                                   | The name of the current Git branch      |
+| `--owner`  | `-o`  | The owner of the repository where the action is located.                                             | The owner of the current Git repository |
+| `--repo`   | `-p`  | The name of the repository where the action is located.                                              | The name of the current Git repository  |
+| `--token`  | `-t`  | The token used for authentication. If not provided, the GAR_TOKEN environment variable will be used. | None                                    |
+| `--inputs` | `-i`  | The name of the event that triggers the action.                                                      | An empty string                         |
+
+Please note that all the parameters are optional, and if not provided, default values will be used.
+
 ## History Command
 
 The `gar history` command provides a historical record of the runs of a selected workflow. Here's an example of how you might use it:
@@ -128,6 +140,10 @@ Each row in the table represents a single run of the workflow. The columns provi
 ## Help
 
 For more information about the available commands and options, you can refer to the package documentation or run github-action-runner --help in your terminal.
+
+## Action example
+
+https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.yml
 
 ## License
 
