@@ -1,6 +1,6 @@
 [![Crates.io](https://img.shields.io/crates/v/github-action-runner.svg)](https://crates.io/crates/github-action-runner)
 [![GitHub issues](https://img.shields.io/github/issues/s00d/github-action-runner.svg)](https://github.com/s00d/github-action-runner/issues)
-[![GitHub license](https://img.shields.io/github/license/s00d/github-action-runner.svg)](https://github.com/s00d/github-action-runner/blob/main/LICENSE
+[![GitHub license](https://img.shields.io/github/license/s00d/github-action-runner.svg)](https://github.com/s00d/github-action-runner/blob/main/LICENSE)
 
 # GitHub Actions Runner
 
