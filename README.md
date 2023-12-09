@@ -114,7 +114,7 @@ gar --token <personal-access-token>
 gar --inputs <input-name1>=<value1>,<input-name2>=<value2>
 ```
 
-## History Command
+## Command: `History`
 
 The `gar history` command provides a historical record of the runs of a selected workflow. Here's an example of how you might use it:
 
@@ -144,6 +144,28 @@ Each row in the table represents a single run of the workflow. The columns provi
 - `Updated At`: The time when the run was last updated.
 - `Url`: The URL where you can view the run on GitHub.
 
+
+## Command: `details`
+
+The `details` command displays the details of a GitHub Actions workflow run.
+
+### Syntax
+
+```shell
+gar details
+```
+
+### Description
+
+The `details` command allows you to view the details of a GitHub Actions workflow run, including information such as the run ID, name, display title, URL, status, conclusion, branch, creation timestamp, and update timestamp. Additionally, it retrieves and displays the logs associated with the run.
+
+This command provides a comprehensive overview of a specific workflow run, allowing you to analyze its execution and troubleshoot any issues that may have occurred.
+
+### Example
+
+```shell
+gar details
+```
 ## Help
 
 For more information about the available commands and options, you can refer to the package documentation or run github-action-runner --help in your terminal.
