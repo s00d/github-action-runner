@@ -93,7 +93,19 @@ jobs:
           sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev
         shell: bash
 
-      - name: Build
+      - name: Build windows
+        if: runner.os == 'Windows'
+        run: |
+          $targets = "${{ matrix.targets }}".split(',')
+          foreach ($target in $targets) {
+            rustup target add $target
+            cargo build --release --bin gar --target $target
+            $extension = if (${{ runner.os }} -eq 'Windows') { '.exe' } else { '' }
+            mv "target/$target/release/gar$extension" "target/$target/release/gar-$target$extension"
+          }
+
+      - name: Build other
+        if: runner.os != 'Windows'
         run: |
           for TARGET in $(echo ${{ matrix.targets }} | tr "," "\n")
           do
