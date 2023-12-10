@@ -94,7 +94,6 @@ jobs:
         shell: bash
 
       - name: Build
-        shell: bash
         run: |
           for TARGET in $(echo ${{ matrix.targets }} | tr "," "\n")
           do
