@@ -49,7 +49,8 @@ jobs:
           - os: ubuntu-latest
             targets: i686-unknown-linux-gnu,x86_64-unknown-linux-gnu
           - os: windows-latest
-            targets: x86_64-pc-windows-msvc,aarch64-pc-windows-msvc
+            targets: x86_64-pc-windows-msvc
+#            targets: x86_64-pc-windows-msvc,aarch64-pc-windows-msvc,i686-pc-windows-msvc
           - os: macos-latest
             targets: x86_64-apple-darwin,aarch64-apple-darwin
 
@@ -73,6 +74,11 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.34'
+
+      - name: Install Perl modules
+        if: runner.os == 'Windows'
+        run: |
+          cpanm Locale::Maketext::Simple
 
       - name: Add architectures for dpkg
         if: runner.os == 'Linux'
