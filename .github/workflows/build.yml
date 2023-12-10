@@ -100,8 +100,7 @@ jobs:
           foreach ($target in $targets) {
             rustup target add $target
             cargo build --release --bin gar --target $target
-            $extension = if (${{ runner.os }} -eq 'Windows') { '.exe' } else { '' }
-            mv "target/$target/release/gar$extension" "target/$target/release/gar-$target$extension"
+            mv "target/$target/release/gar.exe" "target/$target/release/gar-$target.exe"
           }
 
       - name: Build other
@@ -111,7 +110,7 @@ jobs:
           do
             rustup target add $TARGET
             cargo build --release --bin gar --target $TARGET
-            mv target/$TARGET/release/gar${{ runner.os == 'Windows' && '.exe' || '' }} target/$TARGET/release/gar-$TARGET${{ runner.os == 'Windows' && '.exe' || '' }}
+            mv target/$TARGET/release/gar target/$TARGET/release/gar-$TARGET
           done
 
       - name: Upload artifact

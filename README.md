@@ -181,4 +181,3 @@ https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.
 ## License
 
 `gar` is distributed under the MIT license. See the `LICENSE` file for details.
-
