@@ -77,7 +77,7 @@ jobs:
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev pkg-config:i386 libasound2-dev:i386
+          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev libasound2-dev:i386
         shell: bash
 
       - name: Build windows
@@ -96,6 +96,15 @@ jobs:
           for TARGET in $(echo ${{ matrix.targets }} | tr "," "\n")
           do
             rustup target add $TARGET
+            if [[ $TARGET == *"i686"* ]]; then
+              echo "PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig" >> $GITHUB_ENV
+              echo "PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu" >> $GITHUB_ENV
+              echo "PKG_CONFIG_SYSROOT_DIR=/usr" >> $GITHUB_ENV
+            else
+              echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+              echo "PKG_CONFIG_LIBDIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+              echo "PKG_CONFIG_SYSROOT_DIR=/usr" >> $GITHUB_ENV
+            fi
             cargo build --release --bin gar --target $TARGET
             mv target/$TARGET/release/gar target/$TARGET/release/gar-$TARGET
           done
