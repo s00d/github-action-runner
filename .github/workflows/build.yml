@@ -1,12 +1,7 @@
 name: Build and Release
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'Formula/**'
+  workflow_dispatch:
 
 permissions:
   contents: write
