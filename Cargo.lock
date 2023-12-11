@@ -730,6 +730,7 @@ dependencies = [
 name = "github-action-runner"
 version = "1.0.57"
 dependencies = [
+ "alsa-sys",
  "clap",
  "colored",
  "dialoguer",
