@@ -178,6 +178,10 @@ For more information about the available commands and options, you can refer to 
 
 https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.yml
 
+## Dependensis
+
+https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.yml
+
 ## License
 
 `gar` is distributed under the MIT license. See the `LICENSE` file for details.
