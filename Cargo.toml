@@ -1,6 +1,6 @@
 [package]
 name = "github-action-runner"
-version = "1.0.56"
+version = "1.0.57"
 edition = "2021"
 authors = ["s00d <Virus191288@gmail.com>"]
 description = "command-line utility written in Rust for working with GitHub Actions"
@@ -29,3 +29,4 @@ prettytable-rs = "0.10.0"
 indicatif = "0.17.7"
 zip = "0.6.6"
 dirs = { version = "5.0.1", features = [] }
+rodio = "0.17.3"

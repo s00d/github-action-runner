@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use clap::{Arg, Command, value_parser};
 use git::{Git};
 use github::{ GitHub };
-use crate::helpers::install_zsh_autocompletion;
+use crate::helpers::{install_zsh_autocompletion};
 
 fn create_arg(name: &'static str, long: &'static str, short: char, help: &'static str) -> Arg {
     Arg::new(name)

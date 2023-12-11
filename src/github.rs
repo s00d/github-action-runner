@@ -9,7 +9,7 @@ use reqwest::{Client, Response};
 use serde::Deserialize;
 use serde_json::json;
 use tokio::sync::Mutex;
-use crate::helpers::unzip_and_concatenate;
+use crate::helpers::{beep, unzip_and_concatenate};
 use crate::helpers::update_progress_bar;
 
 #[derive(Deserialize, Clone)]
@@ -199,6 +199,8 @@ impl GitHub {
             println!("Actions: https://github.com/{}/{}/actions", self.owner, self.repo);
             println!("Tree: https://github.com/{}/tree/{}", self.repo, ref_name);
 
+            beep(1);
+
             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
             // Get the ID of the last run.
             let runs = self.get_workflow_runs(workflow.id).await?;
@@ -225,6 +227,7 @@ impl GitHub {
                                 pb.finish_with_message("GitHub action completed");
                                 println!("");
                                 println!("GitHub action completed with conclusion: {}", run.conclusion.clone().unwrap_or_else(|| "unknown".to_string()));
+                                beep(3);
                                 break;
                             },
                             _ => {

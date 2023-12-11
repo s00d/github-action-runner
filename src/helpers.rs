@@ -1,9 +1,11 @@
 use std::{env, fs};
-use std::io::{Cursor, Read};
+use std::fs::File;
+use std::io::{BufReader, Cursor, Read};
 use zip::ZipArchive;
 use std::sync::Arc;
 use std::time::Duration;
 use indicatif::ProgressBar;
+use rodio::{Decoder, OutputStream, Sink};
 use tokio::sync::Mutex;
 
 pub fn unzip_and_concatenate(data_bytes: Vec<u8>) -> Result<String, Box<dyn std::error::Error>> {
@@ -78,4 +80,23 @@ pub(crate) fn install_zsh_autocompletion() -> Result<(), Box<dyn std::error::Err
     println!("you need add plugin `gar` to your zsh config {:?}", zsh_config);
 
     Ok(())
+}
+
+pub(crate) fn beep(count: u8) {
+    // Получаем устройство для воспроизведения
+    let (_stream, handle) = OutputStream::try_default().unwrap();
+
+    // Воспроизводим звук три раза
+    for _ in 0..count {
+        let file = File::open("beep.mp3").unwrap();
+        let source = Decoder::new(BufReader::new(file)).unwrap();
+        let sink = Sink::try_new(&handle).unwrap();
+
+        // Добавляем звук в Sink для воспроизведения
+        sink.append(source);
+
+        // Используем sleep, чтобы дать время звуку для воспроизведения
+        // Предположим, что длительность beep.mp3 - 1 секунда
+        std::thread::sleep(Duration::from_millis(300));
+    }
 }
