@@ -1,5 +1,4 @@
 use std::{env, fs};
-use std::fs::File;
 use std::io::{BufReader, Cursor, Read};
 use zip::ZipArchive;
 use std::sync::Arc;
