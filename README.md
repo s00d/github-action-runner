@@ -178,9 +178,9 @@ For more information about the available commands and options, you can refer to 
 
 https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.yml
 
-## Dependensis
+## Linux Dependensis
 
-https://github.com/s00d/github-action-runner/blob/main/.github/workflows/runner.yml
+`gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev`
 
 ## License
 
