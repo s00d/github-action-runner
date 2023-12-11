@@ -84,7 +84,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev
+          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev pkg-config
         shell: bash
 
       - name: Build windows
