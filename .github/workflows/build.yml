@@ -72,17 +72,12 @@ jobs:
         run: |
           cpanm Locale::Maketext::Simple
 
-      - name: Add architectures for dpkg
-        if: runner.os == 'Linux'
-        run: |
-          sudo dpkg --add-architecture i386
-        shell: bash
-
       - name: Install multilib dependencies
         if: runner.os == 'Linux'
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev
+          sudo apt-get install -y gcc-multilib g++-multilib pkg-config libssl-dev libasound2-dev libasound2-dev:i386
         shell: bash
 
       - name: Build windows
