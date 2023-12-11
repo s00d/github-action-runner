@@ -84,11 +84,19 @@ pub(crate) fn install_zsh_autocompletion() -> Result<(), Box<dyn std::error::Err
 
 pub(crate) fn beep(count: u8) {
     let (_stream, handle) = OutputStream::try_default().unwrap();
+    let beep_mp3_data = include_bytes!("../beep.mp3").to_vec();
     for _ in 0..count {
-        let file = File::open("beep.mp3").unwrap();
-        let source = Decoder::new(BufReader::new(file)).unwrap();
-        let sink = Sink::try_new(&handle).unwrap();
-        sink.append(source);
-        std::thread::sleep(Duration::from_millis(300));
+        let cursor = Cursor::new(beep_mp3_data.clone());
+        match Decoder::new(BufReader::new(cursor)) {
+            Ok(source) => {
+                let sink = Sink::try_new(&handle).unwrap();
+                sink.append(source);
+                sink.sleep_until_end();
+            }
+            Err(_e) => {
+                // Если декодирование не удалось, просто вернуться из функции
+                return;
+            }
+        }
     }
 }
