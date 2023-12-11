@@ -83,20 +83,12 @@ pub(crate) fn install_zsh_autocompletion() -> Result<(), Box<dyn std::error::Err
 }
 
 pub(crate) fn beep(count: u8) {
-    // Получаем устройство для воспроизведения
     let (_stream, handle) = OutputStream::try_default().unwrap();
-
-    // Воспроизводим звук три раза
     for _ in 0..count {
         let file = File::open("beep.mp3").unwrap();
         let source = Decoder::new(BufReader::new(file)).unwrap();
         let sink = Sink::try_new(&handle).unwrap();
-
-        // Добавляем звук в Sink для воспроизведения
         sink.append(source);
-
-        // Используем sleep, чтобы дать время звуку для воспроизведения
-        // Предположим, что длительность beep.mp3 - 1 секунда
         std::thread::sleep(Duration::from_millis(300));
     }
 }
