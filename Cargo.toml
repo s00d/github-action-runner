@@ -30,4 +30,3 @@ indicatif = "0.17.7"
 zip = "0.6.6"
 dirs = { version = "5.0.1", features = [] }
 rodio = "0.17.3"
-alsa-sys = "0.3.1"
