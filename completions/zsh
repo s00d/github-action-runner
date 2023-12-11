@@ -1,18 +1,15 @@
 #compdef gar
 
-setopt localoptions extended_glob
+local -a _arguments
 
-local cmd
-local -a args
-local -a _comp_priv_prefix
-
-cmd="$words[1]"
-
-args=(
-  '(-c --clear)'{-c,--clear}'[Clear screen before executing command]'
+_arguments=(
   '(-h --help)'{-h,--help}'[Print help information]'
   '(-V --version)'{-V,--version}'[Print version information]'
-  '*::arguments:{ _comp_priv_prefix=( $cmd -n ${(kv)opt_args[-u]} ) ; _normal }'
+  '(-r --ref)'{-r,--ref}'[The name of the ref tree]'
+  '(-o --owner)'{-o,--owner}'[The owner of the repository where the action is located.]'
+  '(-p --repo)'{-p,--repo}'[The name of the repository where the action is located.]'
+  '(-t --token)'{-t,--token}'[The token used for authentication.]'
+  '(-i --inputs)'{-i,--inputs}'[The name of the event that triggers the action.]'
 )
 
-_arguments -s -S $args
+_arguments -s -S $_arguments

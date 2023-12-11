@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use clap::{Arg, Command, value_parser};
 use git::{Git};
 use github::{ GitHub };
+use crate::helpers::install_zsh_autocompletion;
 
 fn create_arg(name: &'static str, long: &'static str, short: char, help: &'static str) -> Arg {
     Arg::new(name)
@@ -43,8 +44,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let history_command = create_subcommand("history", &common_args, "Shows the history of workflow runs");
     let details_command = create_subcommand("details", &common_args, "Shows the details of workflow run");
+    let autocomplete_command = create_subcommand("autocomplete", &[], "add autocomplete to zsh");
 
-    gar_command = gar_command.subcommand(history_command).subcommand(details_command);
+    gar_command = gar_command
+        .subcommand(history_command)
+        .subcommand(details_command)
+        .subcommand(autocomplete_command);
 
     let matches = gar_command.subcommand_required(false).get_matches();
 
@@ -62,6 +67,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Some(("details", _)) => {
             github.show_details().await?;
+        }
+        Some(("autocomplete", _)) => {
+            install_zsh_autocompletion()?;
         }
         _ => {
             let inputs = matches.get_one::<String>("inputs").map(|s| s.to_owned()).unwrap_or_else(String::new);
