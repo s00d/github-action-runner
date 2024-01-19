@@ -55,7 +55,7 @@ impl GitHub {
 
 
         let mut grouped_workflows: Vec<Vec<String>> = Vec::new();
-        let similarity_threshold = 0.6;
+        let similarity_threshold = 0.8;
 
         for workflow in &workflows {
             let mut is_grouped = false;
