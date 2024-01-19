@@ -1,8 +1,5 @@
 name: Manual Workflow 2
 
-concurrency:
-  group: 'test'
-
 on:
   workflow_dispatch:
 
