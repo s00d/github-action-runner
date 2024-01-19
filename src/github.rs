@@ -8,11 +8,9 @@ use prettytable::{Cell, format, row, Row, Table};
 use reqwest::{Client, Response};
 use serde::Deserialize;
 use serde_json::json;
-use strsim::normalized_levenshtein;
 use tokio::sync::Mutex;
 use crate::helpers::{beep, unzip_and_concatenate};
 use crate::helpers::update_progress_bar;
-
 
 #[derive(Deserialize, Clone)]
 struct Workflow {
@@ -53,73 +51,24 @@ impl GitHub {
         let workflows: Vec<Workflow> = serde_json::from_value(workflows_data["workflows"].clone())
             .map_err(|e| format!("Bad request, check token or permissions. Original error: {}", e))?;
 
-
-        let mut grouped_workflows: Vec<Vec<String>> = Vec::new();
-        let similarity_threshold = 0.8;
-
-        for workflow in &workflows {
-            let mut is_grouped = false;
-            for group in &mut grouped_workflows {
-                if normalized_levenshtein(&group[0], workflow.name.as_str()) > similarity_threshold {
-                    group.push(workflow.name.clone());
-                    is_grouped = true;
-                    break;
-                }
-            }
-            if !is_grouped {
-                grouped_workflows.push(vec![workflow.name.clone()]);
-            }
-        }
-
-        let group_names: Vec<String> = grouped_workflows.iter()
-            .map(|g| g.join(", "))
-            .collect();
-
-        let selected_group_index = Select::with_theme(&ColorfulTheme::default())
-            .with_prompt("Select a group of workflows")
-            .default(0)
-            .items(&group_names)
-            .interact()?;
-
-        let selected_group = &grouped_workflows[selected_group_index];
-
-        // Если в группе только один рабочий процесс, его можно выбрать автоматически
-        if selected_group.len() == 1 {
-            if let Some(workflow) = workflows.iter().find(|w| w.name == *selected_group[0]) {
-                println!("Selected workflow: {:?}", workflow.name);
-                return Ok(workflow.clone())
-                // Выполнить действие с выбранным рабочим процессом
-                // Например, выполнить workflow или что-то еще в зависимости от вашей логики
-            } else {
-                return Err("No workflow selected".into())
-            }
-        }
-
-        let workflow_names: Vec<String> = selected_group.iter().map(|wf| {
-            let mut name = wf.clone();
-            if wf.to_lowercase().contains("prod") {
+        let workflow_names: Vec<String> = workflows.iter().map(|wf| {
+            let mut name = wf.name.clone();
+            if wf.name.to_lowercase().contains("prod") {
                 name = format!(" !!! {} ", name).red().to_string();
             }
-            if wf.to_lowercase().contains("test") {
+            if wf.name.to_lowercase().contains("test") {
                 name = format!(" {} ", name).blue().to_string();
             }
             name
         }).collect();
 
-        let selected_workflow_index = Select::with_theme(&ColorfulTheme::default())
-            .with_prompt("Select a workflow")
-            .default(0)
+        let selected = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Select a workflow:")
             .items(&workflow_names)
+            .default(0)
             .interact()?;
 
-        let selected_workflow = &selected_group[selected_workflow_index];
-
-        if let Some(workflow) = workflows.iter().find(|w| w.name == *selected_workflow) {
-            println!("Selected workflow: {:?}", workflow.name);
-            return Ok(workflow.clone())
-        }
-
-        return Err("No workflow selected".into())
+        Ok(workflows[selected].clone())
     }
 
     async fn select_run(&self, workflow_id: u64) -> Result<WorkflowRun, Box<dyn std::error::Error>> {
@@ -240,8 +189,7 @@ impl GitHub {
 
         let confirm = Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(&format!("Run \"{}\"({}) action in \"{}\" tree?", workflow.name, workflow.html_url, ref_name))
-            .interact()
-            .unwrap();
+            .interact()?;
 
         if confirm {
             let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/dispatches", self.owner, self.repo, workflow.id);
