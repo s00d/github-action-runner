@@ -11,7 +11,9 @@ license = "MIT"
 name = "gar"
 path = "src/main.rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["beep"]
+beep = ["rodio"]
 
 [dependencies]
 colored = "2.1.0"
@@ -29,5 +31,5 @@ prettytable-rs = "0.10.0"
 indicatif = "0.17.7"
 zip = "0.6.6"
 dirs = { version = "5.0.1", features = [] }
-rodio = "0.17.3"
+rodio = { version = "0.17.3", default-features = false, features = ["mp3"], optional = true }
 strsim = "0.11.0"
