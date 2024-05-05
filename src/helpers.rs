@@ -1,9 +1,12 @@
 use std::{env, fs};
-use std::io::{BufReader, Cursor, Read};
+use std::io::{Cursor, Read};
+#[cfg(feature = "rodio")]
+use std::io::BufReader;
 use zip::ZipArchive;
 use std::sync::Arc;
 use std::time::Duration;
 use indicatif::ProgressBar;
+#[cfg(feature = "rodio")]
 use rodio::{Decoder, OutputStream, Sink};
 use tokio::sync::Mutex;
 
@@ -81,6 +84,7 @@ pub(crate) fn install_zsh_autocompletion() -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+#[cfg(feature = "rodio")]
 pub(crate) fn beep(count: u8) {
     let (_stream, handle) = OutputStream::try_default().unwrap();
     let beep_mp3_data = include_bytes!("../beep.mp3").to_vec();
@@ -99,3 +103,6 @@ pub(crate) fn beep(count: u8) {
         }
     }
 }
+
+#[cfg(not(feature = "rodio"))]
+pub(crate) fn beep(_count: u8) {}
