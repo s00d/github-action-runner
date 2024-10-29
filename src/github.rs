@@ -1,22 +1,14 @@
-use std::collections::HashMap;
-use std::sync::Arc;
 use colored::Colorize;
-use dialoguer::{Confirm, Select};
+use dialoguer::{Select};
 use dialoguer::theme::ColorfulTheme;
-use indicatif::{ProgressBar, ProgressStyle};
-use prettytable::{Cell, format, row, Row, Table};
 use reqwest::{Client, Response};
 use serde::Deserialize;
-use serde_json::json;
-use tokio::sync::Mutex;
-use crate::helpers::{beep, unzip_and_concatenate};
-use crate::helpers::update_progress_bar;
 
 #[derive(Deserialize, Clone)]
-struct Workflow {
-    id: u64,
-    name: String,
-    html_url: String,
+pub struct Workflow {
+    pub(crate) id: u64,
+    pub(crate) name: String,
+    pub(crate) html_url: String,
 }
 
 #[derive(Deserialize, Clone)]
@@ -44,7 +36,7 @@ impl GitHub {
         GitHub { token, owner, repo }
     }
 
-    async fn select_workflow(&self) -> Result<Workflow, Box<dyn std::error::Error>> {
+    pub(crate) async fn select_workflow(&self) -> Result<Workflow, Box<dyn std::error::Error>> {
         let url = format!("https://api.github.com/repos/{}/{}/actions/workflows", self.owner, self.repo);
         let workflows_data = self.github_request(&url, "GET", None, None)
             .await?;
@@ -71,7 +63,7 @@ impl GitHub {
         Ok(workflows[selected].clone())
     }
 
-    async fn select_run(&self, workflow_id: u64) -> Result<WorkflowRun, Box<dyn std::error::Error>> {
+    pub(crate) async fn select_run(&self, workflow_id: u64) -> Result<WorkflowRun, Box<dyn std::error::Error>> {
         let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/runs", self.owner, self.repo, workflow_id);
         let runs_data = self.github_request(&url, "GET", None, None).await?;
         let runs: Vec<WorkflowRun> = serde_json::from_value(runs_data["workflow_runs"].clone())?;
@@ -167,7 +159,7 @@ impl GitHub {
     }
 
 
-    async fn get_workflow_runs(&self, workflow_id: u64) -> Result<Vec<WorkflowRun>, Box<dyn std::error::Error>> {
+    pub(crate) async fn get_workflow_runs(&self, workflow_id: u64) -> Result<Vec<WorkflowRun>, Box<dyn std::error::Error>> {
         let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/runs", self.owner, self.repo, workflow_id);
         let data = self.github_request(&url, "GET", None, None).await?;
         let runs: Vec<WorkflowRun> = serde_json::from_value(data["workflow_runs"].clone())?;
@@ -183,122 +175,5 @@ impl GitHub {
             let run: WorkflowRun = serde_json::from_value(data)?;
             Ok(Some(run))
         }
-    }
-    pub(crate) async fn run_workflow(&self, ref_name: &str, inputs_collect: HashMap<&str, &str>) -> Result<(), Box<dyn std::error::Error>> {
-        let workflow = self.select_workflow().await?;
-
-        let confirm = Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt(&format!("Run \"{}\"({}) action in \"{}\" tree?", workflow.name, workflow.html_url, ref_name))
-            .interact()?;
-
-        if confirm {
-            let url = format!("https://api.github.com/repos/{}/{}/actions/workflows/{}/dispatches", self.owner, self.repo, workflow.id);
-            let _ = self.github_request(&url, "POST", Some(json!({ "ref": ref_name, "inputs": inputs_collect })), None).await?;
-
-            println!("GitHub action successfully triggered.");
-            println!("Actions: https://github.com/{}/{}/actions", self.owner, self.repo);
-            println!("Tree: https://github.com/{}/tree/{}", self.repo, ref_name);
-
-            beep(1);
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-            // Get the ID of the last run.
-            let runs = self.get_workflow_runs(workflow.id).await?;
-            let run_id = runs.first().map(|r| r.id).ok_or("No runs found")?;
-
-            println!("Action: https://github.com/{}/{}/actions/runs/{}", self.owner, self.repo, run_id);
-
-            let pb = Arc::new(Mutex::new(ProgressBar::new_spinner()));
-            pb.lock().await.set_style(ProgressStyle::default_spinner()
-                .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
-                .template("{spinner} Waiting for the workflow run to complete...").unwrap());
-
-            let pb_clone = Arc::clone(&pb);
-            tokio::spawn(async move {
-                update_progress_bar(pb_clone).await;
-            });
-            // Wait for the workflow run to complete.
-            loop {
-                match self.get_workflow_run(run_id).await? {
-                    Some(run) => {
-                        match run.status.as_str() {
-                            "completed" | "failure" => {
-                                let pb = pb.lock().await;
-                                pb.finish_with_message("GitHub action completed");
-                                println!("");
-                                println!("GitHub action completed with conclusion: {}", run.conclusion.clone().unwrap_or_else(|| "unknown".to_string()));
-                                beep(3);
-                                break;
-                            },
-                            _ => {
-
-                            }
-                        }
-                    }
-                    None => {
-
-                    }
-                }
-                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-            }
-        } else {
-            println!("{}", "Cancel".red());
-        }
-
-        Ok(())
-    }
-
-    pub(crate) async fn show_details(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let workflow = self.select_workflow().await?;
-        let run = self.select_run(workflow.id).await?;
-
-        println!("ID: {}", run.id);
-        println!("Name: {}", run.name);
-        println!("Display Title: {}", run.display_title);
-        println!("URL: {}", run.html_url);
-        println!("Status: {}", run.status);
-        println!("Conclusion: {}", run.conclusion.unwrap_or_else(|| "N/A".to_string()));
-        println!("Branch: {}", run.head_branch);
-        println!("Created At: {}", run.created_at);
-        println!("Updated At: {}", run.updated_at);
-
-        let logs_data = self.github_request_bytes(run.logs_url.as_str(), "GET", None, Some("application/vnd.github+json")).await?;
-        let logs = unzip_and_concatenate(logs_data.clone());
-        println!("Logs: \n{}", logs.unwrap());
-
-        // https://api.github.com/repos/s00d/github-action-runner/actions/runs/7090586915/logs
-        // https://api.github.com/repos/s00d/github-action-runner/actions/runs/7090586915/logs
-
-        Ok(())
-    }
-
-    pub(crate) async fn show_history(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let workflow = self.select_workflow().await?;
-        let runs = self.get_workflow_runs(workflow.id).await?;
-
-        let mut table = Table::new();
-        table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
-        table.add_row(row!["ID", "Branch", "Status", "Conclusion", "Created At", "Updated At", "Url"]);
-
-        for run in runs.iter().take(10) {
-            let conclusion = match &run.conclusion {
-                Some(value) => value.as_str(),
-                None => "N/A",
-            };
-
-            table.add_row(Row::new(vec![
-                Cell::new(&run.id.to_string()),
-                Cell::new(&run.head_branch),
-                Cell::new(&run.status),
-                Cell::new(conclusion),
-                Cell::new(&run.created_at),
-                Cell::new(&run.updated_at),
-                Cell::new(&run.html_url),
-            ]));
-        }
-
-        table.printstd();
-
-        Ok(())
     }
 }
